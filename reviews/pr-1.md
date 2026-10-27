@@ -3,7 +3,55 @@ Kit update 20261027-2340 (review-20261027-2340)
 https://github.com/angrietta/labgossip-kits/pull/1
 
 ## Reviews
+### chatgpt-codex-connector[bot] · COMMENTED · 2026-10-27T15:09:23Z
+<!-- codex-review-receipt:v1 -->
+
+
+### 💡 Codex Review
+
+Here are some automated review suggestions for this pull request.
+
+**Reviewed commit:** `e96f8d2aeb`
+    
+
+<details> <summary>ℹ️ About Codex in GitHub</summary>
+<br/>
+
+[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you
+- Open a pull request for review
+- Mark a draft as ready
+- Comment "@codex review".
+
+If Codex has suggestions, it will comment; otherwise it will react with 👍.
+
+
+
+
+Codex can also answer questions or update the PR. Try commenting "@codex address that feedback".
+            
+</details>
+
 ## Line comments
+### chatgpt-codex-connector[bot] · episodes/ducttape/composite.py:57
+**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  모래주머니 결과 자막에 최대 감소율이라는 한정을 유지하세요**
+
+결과 화면의 `BLOCKED ~70%`는 모래주머니가 누수를 약 70% 줄인다는 일반적인 결과로 읽히지만, 파일 상단 출처 메모와 `timeline.py`는 이를 **최대 약 70%**로 한정합니다. 뒤의 확대 화면에서 `up to ~70%`를 표시하더라도 이 비교 화면의 과장은 남습니다. 이 자막도 `BLOCKED UP TO ~70%`로 수정해 출처의 상한 조건을 유지하세요.
+
+AGENTS.md reference: [AGENTS.md:L16-L19](https://github.com/angrietta/labgossip-kits/blob/e96f8d2aebc6687effb6ca5f80cc78c5271dc7b8/AGENTS.md#L16-L19)
+
+Useful? React with 👍 / 👎.
+
+<!-- codex-code-review-finding:v1 -->
+
+### chatgpt-codex-connector[bot] · episodes/doomsday/scene.py:93
+**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  인구 구슬 배치가 요청한 96개를 모두 생성하도록 수정하세요**
+
+현재 `ER=0.46`, `BR=0.058`로 `fib_cap(96)`의 거리 필터를 계산하면 배치점이 57개만 남습니다. 따라서 아래 생성 루프는 빨간 구슬을 최대 57개만 만들지만, 합성 자막은 구슬 하나가 10억 명이라고 명시하면서 2025년 공식값을 96B로 표시해 시각적 수량과 숫자가 불일치합니다. 구슬 반지름이나 배치 알고리즘을 조정해 실제로 96개 위치를 확보하고, 반환 개수가 요청 개수와 같은지 검증하세요.
+
+Useful? React with 👍 / 👎.
+
+<!-- codex-code-review-finding:v1 -->
+
 ## Conversation
 ### angrietta · 2026-10-27T14:47:01Z
 @codex review
@@ -13,7 +61,7 @@ https://github.com/angrietta/labgossip-kits/pull/1
 
 ### chatgpt-codex-connector[bot] · 2026-10-27T15:07:38Z
 <!-- codex-pull-request-review-summary -->
-<!-- codex-review-state:v1 {"code_review":{"commit_sha":"e96f8d2aebc6687effb6ca5f80cc78c5271dc7b8","has_any_findings":null,"has_unresolved_findings":null,"status":"running"},"security_review":{"commit_sha":null,"has_any_findings":null,"has_unresolved_findings":null,"status":null}} -->
+<!-- codex-review-state:v1 {"code_review":{"commit_sha":"e96f8d2aebc6687effb6ca5f80cc78c5271dc7b8","has_any_findings":true,"has_unresolved_findings":true,"status":"completed"},"security_review":{"commit_sha":null,"has_any_findings":null,"has_unresolved_findings":null,"status":null}} -->
 
 ## Codex Review Summary
 
@@ -21,7 +69,7 @@ This comment shows the latest Codex review activity on this pull request.
 
 | Review | Status | Commit | Review trigger |
 | --- | --- | --- | --- |
-| 📝 **Code Review** | 🔄 **Running** since <relative-time datetime="2026-10-27T15:07:34.582388Z">2026-10-27T15:07:34.582388Z</relative-time> | `e96f8d2` | Manual request |
+| 📝 **Code Review** | ✅ **Completed** <relative-time datetime="2026-10-27T15:09:26.505774Z">2026-10-27T15:09:26.505774Z</relative-time> | `e96f8d2` | Manual request |
 
 
 
