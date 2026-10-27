@@ -1,0 +1,61 @@
+# Copies every review / comment on a pull request into reviews/pr-<number>.md on the "reviews" branch,
+# so Claude can read Codex's feedback with a plain git fetch (no GitHub account link needed).
+name: save-reviews
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: save-reviews
+  cancel-in-progress: false
+
+jobs:
+  save:
+    if: github.event.pull_request || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: collect review log
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "# PR #$PR review log"
+            gh pr view "$PR" -R "$REPO" --json title,url,headRefName --jq '"\(.title) (\(.headRefName))\n\(.url)"'
+            echo
+            echo "## Reviews"
+            gh api "repos/$REPO/pulls/$PR/reviews" --paginate --jq '.[] | "### \(.user.login) · \(.state) · \(.submitted_at)\n\(.body)\n"'
+            echo "## Line comments"
+            gh api "repos/$REPO/pulls/$PR/comments" --paginate --jq '.[] | "### \(.user.login) · \(.path):\(.line // .original_line)\n\(.body)\n"'
+            echo "## Conversation"
+            gh api "repos/$REPO/issues/$PR/comments" --paginate --jq '.[] | "### \(.user.login) · \(.created_at)\n\(.body)\n"'
+          } > "$RUNNER_TEMP/pr-$PR.md"
+      - name: save to the reviews branch
+        env:
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          git config user.name "review-bot"
+          git config user.email "review-bot@users.noreply.github.com"
+          if git fetch origin reviews; then
+            git switch -c reviews origin/reviews
+          else
+            git switch --orphan reviews
+            git rm -rf . -q || true
+          fi
+          mkdir -p reviews
+          cp "$RUNNER_TEMP/pr-$PR.md" reviews/
+          git add reviews
+          git commit -m "review log PR #$PR" || exit 0
+          git push origin reviews

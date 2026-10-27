@@ -1,0 +1,6 @@
+out/
+deps/
+*.mp4
+summary.png
+log*.txt
+__pycache__/
