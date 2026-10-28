@@ -23,7 +23,9 @@ def row_label(img, i, text, f, f0, f1, box=WHITE, fill=INK):
 
 def result(img, i, text, f, f0, f1, box):
     x, y = AN[f"in{i}"][0] * W, AN[f"in{i}"][1] * H
-    pop(img, sprite(f" {text} ", ANTON(58), INK if box != RED else WHITE, stroke=0, box=box, pad=(10, 4), rot=-3), x, y, f, f0, f1)
+    sp = sprite(f" {text} ", ANTON(58), INK if box != RED else WHITE, stroke=0, box=box, pad=(10, 4), rot=-3)
+    x = min(x, W - sp.width / 2 - 24)                  # keep long labels fully on screen
+    pop(img, sp, x, y, f, f0, f1)
 
 def frame(f, img):
     tag(img, 9, "FLOOD LAB")
@@ -54,7 +56,7 @@ def frame(f, img):
         row_label(img, i, lab, f, SETUP[0] + 60 + i * 6, TIGHT_ON - 4, box=YEL if i == 2 else WHITE)
         row_label(img, i, lab, f, CATCH[0] + 20, F_END + 10, box=YEL if i == 2 else WHITE)
     result(img, 0, "LEAK: 100%", f, RESULT[0] + 6, TIGHT_ON - 4, RED)
-    result(img, 1, "BLOCKED ~70%", f, RESULT[0] + 22, TIGHT_ON - 4, WHITE)
+    result(img, 1, "BLOCKED UP TO ~70%", f, RESULT[0] + 22, TIGHT_ON - 4, WHITE)   # source: "up to about 70 percent"
     result(img, 2, "BLOCKED 97-98%", f, RESULT[0] + 40, TIGHT_ON - 4, YEL)
     # tight on the tape row
     pop(img, sprite("DUCT TAPE", ANTON(120), WHITE), W / 2, 330, f, TIGHT_ON + 4, TIGHT_OFF)

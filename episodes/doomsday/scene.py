@@ -77,20 +77,22 @@ C.keys(plate_piv, "rotation_euler", [(1, (0, 0, 0)), (PLATE, (0, 0, 0)), (PLATE 
                                     (PLATE + 36, (0, 1.62, 0)), (PLATE + 41, (0, 1.52, 0)), (PLATE + 46, (0, 1.57, 0))])
 
 # ------------------------------------------------------------------ population beads (1 bead = 1 billion)
-BR = 0.058
+BR = 0.052
 def fib_cap(n):
     """Points on the earth's upper surface, top first."""
     out, ga = [], math.pi * (3 - math.sqrt(5))
-    for i in range(400):
-        z = 1 - (i + 0.5) / 400 * 2; r = math.sqrt(1 - z * z); th = ga * i
+    for i in range(3000):
+        z = 1 - (i + 0.5) / 3000 * 2; r = math.sqrt(1 - z * z); th = ga * i
         out.append(Vector((r * math.cos(th), r * math.sin(th), z)))
-    out = [p for p in out if p.z > -0.15]
+    out = [p for p in out if p.z > -0.4]
     out.sort(key=lambda p: -p.z)
     keep = []
     for p in out:                                  # thin out so beads don't overlap
-        if all((p - q).length > 2.3 * BR / ER for q in keep): keep.append(p)
+        if all((p - q).length > 2.15 * BR / ER for q in keep): keep.append(p)
     return keep[:n]
 spots = fib_cap(MAX_BEADS)
+# 1 ball = 1 billion people: the count on screen must match the caption (Codex review PR #1)
+assert len(spots) == MAX_BEADS, f"only {len(spots)} ball positions for {MAX_BEADS} balls"
 drops = bead_drop_frames()
 red_beads, white_beads = [], []
 last = 0

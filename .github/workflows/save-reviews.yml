@@ -57,5 +57,5 @@ jobs:
           mkdir -p reviews
           cp "$RUNNER_TEMP/pr-$PR.md" reviews/
           git add reviews
-          git commit -m "review log PR #$PR" || exit 0
+          git commit -m "review log for PR $PR" || exit 0
           git push origin reviews

@@ -1,5 +1,9 @@
 @echo off
-chcp 65001 >nul
+rem keep this window open even if something fails
+if not "%~1"=="run" (
+  cmd /k ""%~f0" run"
+  exit /b
+)
 echo ==================================================
 echo   LAB GOSSIP - GitHub setup check (one time)
 echo ==================================================
@@ -27,7 +31,7 @@ if %errorlevel%==0 (
 if defined NEED_RERUN (
   echo.
   echo Installed. CLOSE this window and double-click SETUP_GITHUB.bat ONE MORE TIME.
-  pause & exit /b 0
+  exit /b 0
 )
 
 echo.
@@ -49,4 +53,3 @@ if defined GHUSER (
 )
 echo.
 echo Send a screenshot of this window to Claude.
-pause
