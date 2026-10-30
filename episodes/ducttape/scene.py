@@ -156,7 +156,9 @@ M_TT = C.clay("turntable", (0.96, 0.95, 0.92), rough=0.6, bump=0.15, thumb=0.1)
 C.set_mats(C.cylinder("tt_base", 0.62, 0.1, P + Vector((0, 0, 0.05))), [M_SHELF])
 spin = C.link(bpy.data.objects.new("spin", None)); spin.location = P + Vector((0, 0, 0.1))
 top = C.cylinder("tt_top", 0.58, 0.05, P + Vector((0, 0, 0.125))); C.set_mats(top, [M_TT]); C.parent(top, spin)
-C.keys(spin, "rotation_euler", [(INTRO[0], (0, 0, -0.6)), (INTRO[1], (0, 0, -0.6 + 2 * math.pi * 1.2))], interp="LINEAR")
+# each contestant swings slowly through facing the camera (-40 deg -> +40 deg), so it is seen front-on mid-caption
+for f0, f1 in INTRO_ITEMS:
+    C.keys(spin, "rotation_euler", [(f0, (0, 0, -0.7)), (f1 - 1, (0, 0, 0.7))], interp="LINEAR")
 Z = P.z + 0.15
 items = []
 # 1) an ordinary front door

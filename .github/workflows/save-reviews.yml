@@ -8,27 +8,32 @@ on:
   pull_request_review_comment:
     types: [created]
   issue_comment:
-    types: [created]
+    types: [created, edited]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "PR number to save"
+        required: true
 
 permissions:
   contents: write
   pull-requests: read
   issues: read
 
-concurrency:
-  group: save-reviews
-  cancel-in-progress: false
+# No concurrency group: Codex posts a review and its line comments at almost the same moment, and a
+# concurrency group cancels the waiting runs, so the full review was never saved. Each run rebuilds the
+# whole log from the GitHub API and pushes with retries instead.
 
 jobs:
   save:
-    if: github.event.pull_request || github.event.issue.pull_request
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request || github.event.issue.pull_request
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: collect review log
         env:
           GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
           REPO: ${{ github.repository }}
         run: |
           {
@@ -44,7 +49,7 @@ jobs:
           } > "$RUNNER_TEMP/pr-$PR.md"
       - name: save to the reviews branch
         env:
-          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
         run: |
           git config user.name "review-bot"
           git config user.email "review-bot@users.noreply.github.com"
@@ -58,4 +63,9 @@ jobs:
           cp "$RUNNER_TEMP/pr-$PR.md" reviews/
           git add reviews
           git commit -m "review log for PR $PR" || exit 0
-          git push origin reviews
+          for i in 1 2 3 4 5; do
+            git push origin reviews && exit 0
+            sleep $((i * 5))
+            git fetch origin reviews && git rebase -X theirs origin/reviews || git rebase --skip || true
+          done
+          exit 1

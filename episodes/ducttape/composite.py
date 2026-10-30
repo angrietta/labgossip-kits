@@ -34,13 +34,13 @@ def frame(f, img):
     pop(img, sprite("vs.", ANTON(70), WHITE), W / 2, 450, f, 30, HOOK[1])
     pop(img, sprite(" A ROLL OF DUCT TAPE ", ANTON(92), INK, stroke=0, box=YEL, pad=(14, 6), rot=-2), W / 2, 560, f, TAPE_ROLL + 4, HOOK[1])
     # contestant intro
+    # two text blocks per contestant, 3 s each (Codex review round 1: readability)
     for k, ((f0, f1), (name, note)) in enumerate(zip(INTRO_ITEMS, [
-            ("AN ORDINARY FRONT DOOR", "no protection at all"),
-            ("54 SANDBAGS + PLASTIC SHEET", "the classic flood defense"),
-            ("ONE ROLL OF DUCT TAPE", "taped onto the door from the outside")])):
-        pop(img, sprite(f" CONTESTANT #{k + 1} ", ANTON(54), INK, stroke=0, box=YEL, pad=(10, 4), rot=-2), W / 2, 300, f, f0 + 2, f1 - 3)
-        pop(img, sprite(name, ANTON(86 if len(name) < 24 else 70), WHITE), W / 2, 405, f, f0 + 6, f1 - 3)
-        pop(img, sprite(note, ARCH(36), WHITE, stroke=6), W / 2, 500, f, f0 + 12, f1 - 3)
+            ("AN ORDINARY FRONT DOOR", "no protection"),
+            ("54 SANDBAGS + PLASTIC", "the classic defense"),
+            ("ONE ROLL OF DUCT TAPE", "stuck on from outside")])):
+        pop(img, sprite(f" #{k + 1}  {name} ", ANTON(74), INK, stroke=0, box=YEL, pad=(14, 6), rot=-2), W / 2, 330, f, f0 + 3, f1 - 3)
+        pop(img, sprite(note, ARCH(40), WHITE, stroke=6), W / 2, 450, f, f0 + 10, f1 - 3)
     # setup
     pop(img, sprite("SAME DOOR. 3 WAYS.", ANTON(92), WHITE), W / 2, 300, f, SETUP[0] + 10, FILL[0] + 30)
     pop(img, sprite("University of Hull flood lab tests", ARCH(36), WHITE, stroke=6), W / 2, 395, f, SETUP[0] + 22, FILL[0] + 30)

@@ -95,10 +95,13 @@ spots = fib_cap(MAX_BEADS)
 assert len(spots) == MAX_BEADS, f"only {len(spots)} ball positions for {MAX_BEADS} balls"
 drops = bead_drop_frames()
 red_beads, white_beads = [], []
-last = 0
+prev = 0
+LAND_BY = EXP2[1]                              # every ball lands by the time the counter reaches "2025 / 96B" (Codex review round 1)
 for i, n in enumerate(spots):
-    f0 = max(drops[i] if i < len(drops) else EXP2[1], last + (2 if i < 12 else 0)) + random.randint(0, 2)
-    last = f0
+    base = drops[i] if i < len(drops) else EXP2[1]
+    if i < 12: base = max(base, prev + 2)      # the first few balls fall one by one; jitter is NOT carried forward
+    prev = base
+    f0 = min(base + random.randint(0, 2), LAND_BY - 5)
     rest = EC + n * (ER + BR * 0.75)
     b = C.uvsphere(f"bead{i}", BR, rest, seg=20, rings=12); C.set_mats(b, [M_BEAD])
     up = rest + Vector((0, 0, 1.6))
