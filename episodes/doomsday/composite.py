@@ -63,7 +63,7 @@ def sfx(m):
     m.add(m.at(HOOK[1] - 36), m.thud(0.5, 70, 40, 0.35))
     m.add(m.at(CIRCLE[0]), m.sweep(700, 1100, 0.5, 0.08, 2))
     for f0 in bead_drop_frames()[:40]:
-        m.add(m.at(f0 + 5), m.tone(1500, 0.04, 0.06, 60))
+        m.add(m.at(f0 + 10), m.tone(1500, 0.04, 0.06, 60))
     hum = m.sweep(60, 110, (EXP2[1] - EXP1[0]) / FPS, 0.05, 0)
     m.add(m.at(EXP1[0]), hum)
     m.add(m.at(SLAM - 6), m.sweep(520, 260, 0.6, 0.12, 3))            # brake groan (soft)

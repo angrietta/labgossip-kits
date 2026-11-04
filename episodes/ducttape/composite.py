@@ -12,6 +12,7 @@ from comp import *
 from timeline import *
 
 AN = json.load(open(os.path.join(HERE, "out", "anchors.json")))
+BAG_LAND = AN.pop("bag_land")
 TIGHT_ON, TIGHT_OFF = RESULT[0] + 70, CATCH[0] + 14       # camera is tight on the tape row here
 
 def row_label(img, i, text, f, f0, f1, box=WHITE, fill=INK):
@@ -73,10 +74,10 @@ def frame(f, img):
 
 def sfx(m):
     m.bed(F_END, skip=[(RESULT[0] - 10, RESULT[0] + 20), (INTRO[0], INTRO[1])])
-    for k in range(18): m.add(m.at(4 + 2 * k + 4), m.thud(0.35, 120, 50, 0.25, 12))    # sandbags
+    for k, L in enumerate(BAG_LAND): m.add(m.at(L), m.thud(0.35, 120, 50, 0.25, 12))    # sandbags
     for k, (f0, f1) in enumerate(INTRO_ITEMS):                                                    # contestant chimes
         m.add(m.at(f0 + 2), m.tone((523, 659, 784)[k], 0.4, 0.18, 6)); m.add(m.at(f0 + 6), m.noise(0.3, 0.2))
-    m.add(m.at(TAPE_ROLL + 5), m.thud(0.5, 260, 90, 0.3, 9)); m.add(m.at(TAPE_ROLL + 13), m.thud(0.3, 300, 110, 0.2, 12))
+    m.add(m.at(TAPE_ROLL + 7), m.thud(0.5, 260, 90, 0.3, 9)); m.add(m.at(TAPE_ROLL + 13), m.thud(0.3, 300, 110, 0.2, 12))
     for f0 in TAPE_STRIPS:                                                                      # tape rip + slap
         m.add(m.at(f0 - 6), m.noise(0.25, 0.25))
         m.add(m.at(f0 + 3), m.thud(0.3, 200, 80, 0.12, 20))

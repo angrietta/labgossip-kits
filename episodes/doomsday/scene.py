@@ -96,17 +96,21 @@ assert len(spots) == MAX_BEADS, f"only {len(spots)} ball positions for {MAX_BEAD
 drops = bead_drop_frames()
 red_beads, white_beads = [], []
 prev = 0
+FALL = 9                                       # frames per fall: slow enough to read at 24 fps (was 5 = looked like skipped frames)
 LAND_BY = EXP2[1]                              # every ball lands by the time the counter reaches "2025 / 96B" (Codex review round 1)
 for i, n in enumerate(spots):
     base = drops[i] if i < len(drops) else EXP2[1]
     if i < 12: base = max(base, prev + 2)      # the first few balls fall one by one; jitter is NOT carried forward
     prev = base
-    f0 = min(base + random.randint(0, 2), LAND_BY - 5)
+    f0 = min(base + random.randint(0, 2), LAND_BY - FALL)
     rest = EC + n * (ER + BR * 0.75)
     b = C.uvsphere(f"bead{i}", BR, rest, seg=20, rings=12); C.set_mats(b, [M_BEAD])
-    up = rest + Vector((0, 0, 1.6))
-    C.keys(b, "location", [(1, tuple(up)), (f0, tuple(up)), (f0 + 5, tuple(rest))])
-    C.keys(b, "scale", [(f0 + 4, (1, 1, 1)), (f0 + 5, (1.25, 1.25, 0.7)), (f0 + 8, (0.95, 0.95, 1.08)), (f0 + 10, (1, 1, 1))])
+    # fly in from OUTSIDE along the surface normal (a straight drop made side/bottom balls pass through the globe)
+    start = rest + n * 0.6 + Vector((0, 0, 0.2))   # stays close to the globe, clear of the plate
+    pts = [(1, tuple(start))] + [(f0 + k, tuple(start.lerp(rest, (k / FALL) ** 2))) for k in range(FALL + 1)]
+    C.keys(b, "location", pts, interp="LINEAR")                       # accelerating, frame-exact, no overshoot
+    L = f0 + FALL
+    C.keys(b, "scale", [(L - 1, (1, 1, 1)), (L + 1, (1.16, 1.16, 0.82)), (L + 5, (0.97, 0.97, 1.04)), (L + 9, (1, 1, 1))])
     C.show_between(b, f0, REAL if i < REAL_BEADS else None)
     if i >= REAL_BEADS:                            # formula-only beads pop away after the reveal
         g = REAL + 4 + int((i - REAL_BEADS) * 0.6)
@@ -173,8 +177,8 @@ def at(f, pose):
 at(1, CLOSE); at(HOOK[1] - 6, CLOSE); at(SETUP[0] + 60, WIDE); at(EXP1[1], WIDE)
 at(EXP2[1] - 20, LOW); at(SLAM - 1, LOW)
 rng = random.Random(4)
-for f in range(SLAM, SLAM + 10):
-    a = 0.05 * (1 - (f - SLAM) / 10)
+for f in range(SLAM, SLAM + 10, 2):              # gentler shake, keyed every 2nd frame so it reads as a bump, not a glitch
+    a = 0.025 * (1 - (f - SLAM) / 10)
     cam.location = LOW[0] + Vector((rng.uniform(-a, a), rng.uniform(-a, a), rng.uniform(-a, a))); cam.keyframe_insert("location", frame=f)
 at(SLAM + 12, LOW); at(PLATE - 20, WIDE); at(OUTRO[0], WIDE); at(OUTRO[0] + 16, CLOSE); at(F_END, CLOSE)
 

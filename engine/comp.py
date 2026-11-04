@@ -148,13 +148,16 @@ def main(ep_dir, f_end, frame_fn, sfx_fn, out_name):
             d.text(((i % 3) * tw + 6, (i // 3) * th + 6), f"{f / FPS:4.1f}s", fill=(255, 214, 0), font=ARCH(18))
         p = os.path.join(ep_dir, "summary.png"); sheet.save(p); print("summary:", p)
         return
+    a, b = 1, f_end
+    if args and args[0] == "clip":                        # short motion check: frames a..b with matching sound
+        a, b = int(args[1]), int(args[2]); out_name = out_name.replace(".mp4", f"_clip_{a}-{b}.mp4")
     mix = Mixer(f_end); sfx_fn(mix); wav = os.path.join(ep_dir, "out", "sfx.wav"); mix.save(wav)
     out = os.path.join(ep_dir, out_name)
     p = subprocess.Popen([FFMPEG, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
-                          "-r", str(FPS), "-i", "-", "-i", wav, "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                          "-crf", "19", "-preset", "medium", "-c:a", "aac", "-b:a", "160k", "-shortest", out], stdin=subprocess.PIPE)
+                          "-r", str(FPS), "-i", "-", "-ss", f"{(a - 1) / FPS:.4f}", "-i", wav, "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                          "-crf", "19", "-preset", "medium", "-c:a", "aac", "-b:a", "160k", "-t", f"{(b - a + 1) / FPS:.4f}", "-shortest", out], stdin=subprocess.PIPE)
     last = None
-    for f in range(1, f_end + 1):
+    for f in range(a, b + 1):
         img = load(frames_dir, f)
         if img is None:
             img = last.copy() if last is not None else Image.new("RGBA", (W, H), (0, 0, 0, 255))

@@ -257,14 +257,46 @@ def show_between(ob, f_on, f_off=None):
             for kp in fc.keyframe_points: kp.interpolation = "CONSTANT"
 
 # ------------------------------------------------------------------ render
+ENGINE = os.environ.get("CLAY_ENGINE", "EEVEE").upper()   # EEVEE (기본: 빠르고 노이즈 떨림 없음) / CYCLES
+
 def setup_render(samples=32):
-    r = sc.render; r.engine = "CYCLES"; r.resolution_x, r.resolution_y = 1080, 1920; r.resolution_percentage = 100
-    sc.cycles.samples = samples; sc.cycles.use_adaptive_sampling = True; sc.cycles.adaptive_threshold = 0.04
-    sc.cycles.use_denoising = True
-    sc.cycles.max_bounces = 6; sc.cycles.diffuse_bounces = 2; sc.cycles.glossy_bounces = 2; sc.cycles.transmission_bounces = 4
+    r = sc.render; r.resolution_x, r.resolution_y = 1080, 1920; r.resolution_percentage = 100
     r.film_transparent = False; r.image_settings.file_format = "PNG"
     r.use_motion_blur = True; r.motion_blur_shutter = 0.5; r.motion_blur_position = "START"          # 움직임이 부드럽게 이어지도록
     sc.view_settings.view_transform = "Standard"; sc.view_settings.exposure = -0.35
+    if ENGINE == "EEVEE":
+        _setup_eevee()
+    else:
+        _setup_cycles(samples)
+    if os.environ.get("PREVIEW"):           # quick look: tiny + few samples
+        r.resolution_x, r.resolution_y = 360, 640
+        sc.cycles.samples = 8; sc.eevee.taa_render_samples = 16
+
+def _setup_eevee():
+    """EEVEE: every frame is drawn the same deterministic way, so there is no per-frame noise for a denoiser
+    to 'boil' — small objects (balls, sandbags) stay perfectly still once they land."""
+    r, e = sc.render, sc.eevee
+    r.engine = "BLENDER_EEVEE"
+    e.taa_render_samples = 64                         # anti-aliasing + soft shadows + motion blur, all stable
+    e.use_raytracing = True; e.ray_tracing_method = "SCREEN"
+    e.use_shadows = True; e.shadow_ray_count = 3; e.shadow_step_count = 12; e.shadow_resolution_scale = 1.0
+    e.use_fast_gi = True; e.fast_gi_distance = 0.6   # soft contact darkening where clay touches clay
+    e.motion_blur_steps = 2
+    for m in bpy.data.materials:                      # see-through materials (water, plastic sheet)
+        if not m.use_nodes: continue
+        p = m.node_tree.nodes.get("Principled BSDF")
+        if p is None: continue
+        if p.inputs["Transmission Weight"].default_value > 0:
+            m.use_raytrace_refraction = True; m.surface_render_method = "DITHERED"
+        if p.inputs["Alpha"].default_value < 1:
+            m.surface_render_method = "BLENDED"
+    print("RENDER DEVICE: EEVEE (GPU)", r.resolution_x, "x", r.resolution_y, "samples", e.taa_render_samples, flush=True)
+
+def _setup_cycles(samples):
+    r = sc.render; r.engine = "CYCLES"
+    sc.cycles.samples = samples; sc.cycles.use_adaptive_sampling = True; sc.cycles.adaptive_threshold = 0.04
+    sc.cycles.use_denoising = True
+    sc.cycles.max_bounces = 6; sc.cycles.diffuse_bounces = 2; sc.cycles.glossy_bounces = 2; sc.cycles.transmission_bounces = 4
     dev = "CPU"
     try:
         prefs = bpy.context.preferences.addons["cycles"].preferences
@@ -281,8 +313,6 @@ def setup_render(samples=32):
         pass
     if dev == "CPU":
         sc.cycles.device = "CPU"; r.resolution_x, r.resolution_y = 720, 1280; sc.cycles.samples = 12
-    if os.environ.get("PREVIEW"):           # quick look: tiny + few samples
-        r.resolution_x, r.resolution_y = 360, 640; sc.cycles.samples = 8
     print("RENDER DEVICE:", dev, r.resolution_x, "x", r.resolution_y, "samples", sc.cycles.samples, flush=True)
 
 def run(out_dir):
