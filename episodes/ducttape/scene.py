@@ -106,14 +106,19 @@ zt = zts[1]
 bags = [(-0.16, y, 0.06 + 0.105 * L) for L in range(4) for y in (-0.18, 0.0, 0.18)] + \
        [(-0.34, y, 0.06 + 0.105 * L) for L in range(2) for y in (-0.18, 0.0, 0.18)]
 bags.sort(key=lambda b: (b[2], b[0]))
+BAG_LAND = []
 for k, (x, y, h) in enumerate(bags):
     bag = C.blob(f"bag{k}", [((0, 0, 0), (0.095, 0.1, 0.058)), ((0, 0.085, 0.0), (0.06, 0.04, 0.042))], voxel=0.012)
     tie = C.uvsphere(f"tie{k}", 0.02, (0, 0.125, 0.0)); C.set_mats(tie, [M_TIE])
     C.set_mats(bag, [M_BAG]); C.parent(tie, bag)
     rest = Vector((x, y, zt + h)); bag.rotation_euler = (random.uniform(-0.08, 0.08), 0, random.uniform(-0.25, 0.25))
-    f0 = 4 + 2 * k
-    C.keys(bag, "location", [(1, tuple(rest + Vector((0, 0, 1.2)))), (f0, tuple(rest + Vector((0, 0, 1.2)))), (f0 + 4, tuple(rest))])
-    C.keys(bag, "scale", [(f0 + 3, (1, 1, 1)), (f0 + 4, (1.15, 1.1, 0.75)), (f0 + 7, (0.97, 0.98, 1.06)), (f0 + 9, (1, 1, 1))])
+    f0 = 2 + 2 * k
+    # enter just under the shelf above (top edge of frame), fall with gravity: 6-9 frames depending on height
+    top = Vector((x, y, zt + 0.72)); n = max(6, round(9 * math.sqrt((top.z - rest.z) / 0.66)))
+    C.keys(bag, "location", [(1, tuple(top))] + [(f0 + j, tuple(top.lerp(rest, (j / n) ** 2))) for j in range(n + 1)], interp="LINEAR")
+    L = f0 + n; BAG_LAND.append(L)
+    C.keys(bag, "scale", [(L - 1, (1, 1, 1)), (L + 1, (1.12, 1.08, 0.8)), (L + 4, (0.97, 0.98, 1.05)), (L + 7, (1, 1, 1))])
+    C.show_between(bag, f0); C.show_between(tie, f0)
 sheet = C.box("sheet", (0.012, RIG_D - 0.1, 0.46), (-0.045, -0.01, zt + 0.23), bevel=0.004); C.set_mats(sheet, [M_SHEET])
 C.show_between(sheet, 4 + 2 * len(bags) + 4)
 
@@ -145,10 +150,15 @@ for f_ in bm.faces: f_.smooth = True
 torus = C.mesh_obj("roll_mesh", bm); C.set_mats(torus, [M_TAPE])
 C.parent(torus, roll)
 rest = Vector((0.55, -0.1, zt + R2 * 1.4))
-C.keys(roll, "location", [(1, tuple(rest + Vector((0, 0, 1.3)))), (TAPE_ROLL, tuple(rest + Vector((0, 0, 1.3)))),
-                          (TAPE_ROLL + 5, tuple(rest)), (TAPE_ROLL + 9, tuple(rest + Vector((0, 0, 0.12)))), (TAPE_ROLL + 13, tuple(rest))])
-C.keys(roll, "scale", [(TAPE_ROLL + 4, (1, 1, 1)), (TAPE_ROLL + 5, (1.2, 1.2, 0.7)), (TAPE_ROLL + 8, (0.95, 0.95, 1.1)),
-                       (TAPE_ROLL + 13, (1.1, 1.1, 0.85)), (TAPE_ROLL + 16, (1, 1, 1))])
+# drop inside the bottom compartment, accelerating (7 frames), then one small bounce (6 frames)
+top = Vector((rest.x, rest.y, zt + 0.72)); T = TAPE_ROLL - 2          # lands at TAPE_ROLL + 7
+pts = [(1, tuple(top))] + [(T + j, tuple(top.lerp(rest, (j / 9) ** 2))) for j in range(10)]
+T += 2
+pts += [(T + 7 + j, tuple(rest + Vector((0, 0, 0.07 * (1 - ((j - 3) / 3) ** 2))))) for j in range(1, 7)]
+C.keys(roll, "location", pts, interp="LINEAR")
+C.keys(roll, "scale", [(T + 6, (1, 1, 1)), (T + 8, (1.15, 1.15, 0.8)), (T + 11, (0.97, 0.97, 1.05)),
+                       (T + 13, (1.08, 1.08, 0.88)), (T + 17, (1, 1, 1))])
+C.show_between(torus, T - 2)
 
 # ------------------------------------------------------------------ contestant intro: turntable off to the right
 P = Vector((5.0, 0.2, 0.0))
@@ -179,7 +189,7 @@ for k, (x, y, z) in enumerate([(-0.2, 0, 0.06), (0, 0, 0.06), (0.2, 0, 0.06), (-
 sh = C.box("c_sheet", (0.8, 0.5, 0.01), P + Vector((0, -0.05, Z + 0.006)), bevel=0.004); C.set_mats(sh, [M_SHEET]); g.append(sh)
 items.append(g)
 # 3) a roll of duct tape with a strip pulled out
-big = torus.copy(); big.data = torus.data.copy(); C.link(big); big.parent = None
+big = torus.copy(); big.data = torus.data.copy(); C.link(big); big.parent = None; big.animation_data_clear()   # do not share the hook roll's action
 big.location = P + Vector((0, 0.05, Z + 0.225)); big.rotation_euler = (math.radians(90), 0, 0); big.scale = (1.7, 1.7, 1.7)
 strip = C.box("c_strip", (0.2, 0.34, 0.006), P + Vector((0.0, -0.18, Z + 0.004)), bevel=0.002)
 C.set_mats(strip, [M_TAPE])
@@ -217,6 +227,7 @@ C.setup_render()
 os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
 sc.frame_set(RESULT[0]); bpy.context.view_layer.update()
 an = {k: (lambda v: [v.x, 1 - v.y])(world_to_camera_view(sc, cam, Vector(p))) for k, p in anchors3d.items()}
+an["bag_land"] = BAG_LAND
 json.dump(an, open(os.path.join(HERE, "out", "anchors.json"), "w"))
 
 C.run(os.path.join(HERE, "out"))
