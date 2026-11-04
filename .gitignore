@@ -5,3 +5,5 @@ summary.png
 log*.txt
 __pycache__/
 .review_round
+codex-update*/
+codex-update*.zip
